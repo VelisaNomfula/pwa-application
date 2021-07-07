@@ -49,19 +49,32 @@
         </v-list-item>
         <v-divider></v-divider>
         </div>
-  
+        {{"This is it"}}
+        <div v-for="toDo of sorted" :key="toDo.id">
+          <div>{{ "Todo"+ toDo.user }} - {{ moment(toDo.createdAt).format('YYYY-MM-DD HH:mm:ss')}})</div>
+          <div>{{ "List "+toDo.toDo }}</div>
+        </div>
+
     </v-list>
+
+    
   </div>
 
 </template>
 
 <script>
-  
+import { DataStore, Predicates } from "@aws-amplify/datastore";
+import { Todo } from "../models";
+//import moment from "moment";
+
 
   export default {
     name: 'Home',
   data() {
     return {
+      user: {},
+      toDos: [],
+
       newTaskTitle : "",
       tasks: [
         {
@@ -86,6 +99,11 @@
       ]
     }
   },
+  computed : {
+    sorted() {
+      return [...this.toDos].sort((a, b) => -a.createdAt.localeCompare(b.createdAt));
+    }
+  },
   methods: {
     addTask(){
       let newTask = {
@@ -103,8 +121,19 @@
 
     deleteTask(id){
       this.tasks = this.tasks.filter(task => task.id != id)
-    }
+    },
+
+    toDoList(){
+      const messages = DataStore.query(Todo, Predicates.ALL);
+      return messages.user;
+    },
+
+    loadMessages() {
+      DataStore.query(Todo, Predicates.ALL).then(toDos => {
+        this.toDos = toDos;
+      });
+    },
   }
     
-  }
+}
 </script>
