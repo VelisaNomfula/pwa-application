@@ -1,7 +1,7 @@
 <template>
   <div class="home">
   <div>
-    <amplify-sign-out></amplify-sign-out>
+    <amplify-sign-out @click="refreshPage()"></amplify-sign-out>
   </div>
     <v-text-field
       v-model="newItem"
@@ -52,7 +52,7 @@
 
 <script>
   import { Auth, API, graphqlOperation } from "aws-amplify";
-
+ 
   import * as queries from "../graphql/queries";
   import * as mutations from "../graphql/mutations";
   import * as subscriptions from "../graphql/subscriptions";
@@ -63,6 +63,7 @@
     return {
       listItems: [],
       newItem: "",
+      loading: true
     }
   },
 
@@ -93,6 +94,7 @@
     });
   },
   async created() {
+
     const {data} = await API.graphql(
       graphqlOperation(queries.listTodoListItems)
     );
@@ -102,7 +104,6 @@
     });
   },
   methods: {
-
     async addTodoitem() {
       await API.graphql(
         graphqlOperation(mutations.createTodoListItem,{
@@ -110,6 +111,7 @@
         })
       );
       this.newItem = ""; 
+      this.getData()
     },
 
     async deleTodoItem(id) {
@@ -118,7 +120,26 @@
           input: { id: id}
         })
       );
+      this.getData()
     },
+
+    async getData() {
+      try {
+        this.loading = true;
+        const response = await API.graphql(graphqlOperation(queries.listTodoListItems));
+        this.listItems = response.data.listTodoListItems.items;
+      }
+      catch(error){
+          console.log('Error loading Todo list...', error)
+      }
+      finally {
+        this.loading = false;
+      }
+    },
+
+    refreshPage(){
+      this.$forceUpdate();
+    }
   }
-  }
+}
 </script>
