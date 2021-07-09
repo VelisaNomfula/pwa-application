@@ -1,10 +1,12 @@
 <template>
   <div class="home">
-
+  <div>
+    <amplify-sign-out></amplify-sign-out>
+  </div>
     <v-text-field
-      v-model="newTaskTitle"
-      @click:append="addTask"
-      @keyup.enter="addTask"
+      v-model="newItem"
+      @click:append="addTodoitem"
+      @keyup.enter="addTodoitem"
       class="pa-3"
       outlined
       label="Add task"
@@ -17,7 +19,7 @@
       flat
     >
         <div
-          v-for="task in tasks"
+          v-for="task in listItems"
           :key="task.id"
         >
         <v-list-item
@@ -25,20 +27,13 @@
           :class="{ 'blue lighten-5' : task.done}"
         >
           <template v-slot:default>
-            <v-list-item-action>
-              <v-checkbox
-                :input-value="task.done"
-                color="primary"
-              ></v-checkbox>
-            </v-list-item-action>
-
             <v-list-item-content>
-              <v-list-item-title> {{task.title}} </v-list-item-title>
+              <v-list-item-title> {{task.name}} </v-list-item-title>
             </v-list-item-content>
 
             <v-list-item-action>
               <v-btn 
-                @click.stop="deleteTask(task.id)"
+                @click.stop="deleTodoItem(task.id)"
                 icon
               >
                 <v-icon color="primary lighten-1">mdi-delete</v-icon>
@@ -49,91 +44,81 @@
         </v-list-item>
         <v-divider></v-divider>
         </div>
-        {{"This is it"}}
-        <div v-for="toDo of sorted" :key="toDo.id">
-          <div>{{ "Todo"+ toDo.user }} - {{ moment(toDo.createdAt).format('YYYY-MM-DD HH:mm:ss')}})</div>
-          <div>{{ "List "+toDo.toDo }}</div>
-        </div>
-
+  
     </v-list>
-
-    
   </div>
 
 </template>
 
 <script>
-import { DataStore, Predicates } from "@aws-amplify/datastore";
-import { Todo } from "../models";
-//import moment from "moment";
+  import { Auth, API, graphqlOperation } from "aws-amplify";
 
+  import * as queries from "../graphql/queries";
+  import * as mutations from "../graphql/mutations";
+  import * as subscriptions from "../graphql/subscriptions";
 
   export default {
     name: 'Home',
   data() {
     return {
-      user: {},
-      toDos: [],
-
-      newTaskTitle : "",
-      tasks: [
-        {
-          id: 1,
-          title: "wake up",
-          done : false
-        },
-        {
-          id: 2,
-           title: "Bath",
-          done : false
-        },{
-          id: 3,
-          title: "Make breakfast",
-          done : false
-        },
-        {
-          id: 4,
-          title: "Go to work",
-          done : false
-        }
-      ]
+      listItems: [],
+      newItem: "",
     }
   },
-  computed : {
-    sorted() {
-      return [...this.toDos].sort((a, b) => -a.createdAt.localeCompare(b.createdAt));
-    }
+
+  async mounted() {
+    const currentUser = await Auth.currentAuthenticatedUser();
+    const that = this;
+
+    API.graphql(
+      graphqlOperation(subscriptions.onCreateTodoListItem, {
+        owner: currentUser
+      })
+    ).subscribe({
+      next: action => {
+        that.listItems.push(action.value.data.onCreateTodoListItem);
+      }
+    });
+
+    API.graphql(
+      graphqlOperation(subscriptions.onDeleteTodoListItem, {
+        owner: currentUser
+      })
+    ).subscribe({
+      next: action => {
+        const id = action.value.data.onDeleteTodoListItem.id;
+        const index = that.listItems.map(x => x.id).indexOf(id);
+        that.listItems.splice(index, 1)
+      }
+    });
+  },
+  async created() {
+    const {data} = await API.graphql(
+      graphqlOperation(queries.listTodoListItems)
+    );
+
+    data.listTodoListItems.items.forEach(item => {
+      this.listItems.push(item);
+    });
   },
   methods: {
-    addTask(){
-      let newTask = {
-        id: Date.now(),
-        title: this.newTaskTitle,
-        done: false
-      }
-      this.tasks.push(newTask)
-      this.newTaskTitle = ''
-    },
-    doneTask(id){
-      let task = this.tasks.filter(task => task.id === id)[0]
-      task.done = !task.done
+
+    async addTodoitem() {
+      await API.graphql(
+        graphqlOperation(mutations.createTodoListItem,{
+          input: { name: this.newItem }
+        })
+      );
+      this.newItem = ""; 
     },
 
-    deleteTask(id){
-      this.tasks = this.tasks.filter(task => task.id != id)
-    },
-
-    toDoList(){
-      const messages = DataStore.query(Todo, Predicates.ALL);
-      return messages.user;
-    },
-
-    loadMessages() {
-      DataStore.query(Todo, Predicates.ALL).then(toDos => {
-        this.toDos = toDos;
-      });
+    async deleTodoItem(id) {
+      await API.graphql(
+        graphqlOperation(mutations.deleteTodoListItem,{
+          input: { id: id}
+        })
+      );
     },
   }
-    
-}
+  }
 </script>

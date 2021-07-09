@@ -1,45 +1,45 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createTodo = /* GraphQL */ `
-  mutation CreateTodo(
-    $input: CreateTodoInput!
-    $condition: ModelTodoConditionInput
+export const createTodoListItem = /* GraphQL */ `
+  mutation CreateTodoListItem(
+    $input: CreateTodoListItemInput!
+    $condition: ModelTodoListItemConditionInput
   ) {
-    createTodo(input: $input, condition: $condition) {
+    createTodoListItem(input: $input, condition: $condition) {
       id
-      user
-      message
+      name
       createdAt
       updatedAt
+      owner
     }
   }
 `;
-export const updateTodo = /* GraphQL */ `
-  mutation UpdateTodo(
-    $input: UpdateTodoInput!
-    $condition: ModelTodoConditionInput
+export const updateTodoListItem = /* GraphQL */ `
+  mutation UpdateTodoListItem(
+    $input: UpdateTodoListItemInput!
+    $condition: ModelTodoListItemConditionInput
   ) {
-    updateTodo(input: $input, condition: $condition) {
+    updateTodoListItem(input: $input, condition: $condition) {
       id
-      user
-      message
+      name
       createdAt
       updatedAt
+      owner
     }
   }
 `;
-export const deleteTodo = /* GraphQL */ `
-  mutation DeleteTodo(
-    $input: DeleteTodoInput!
-    $condition: ModelTodoConditionInput
+export const deleteTodoListItem = /* GraphQL */ `
+  mutation DeleteTodoListItem(
+    $input: DeleteTodoListItemInput!
+    $condition: ModelTodoListItemConditionInput
   ) {
-    deleteTodo(input: $input, condition: $condition) {
+    deleteTodoListItem(input: $input, condition: $condition) {
       id
-      user
-      message
+      name
       createdAt
       updatedAt
+      owner
     }
   }
 `;
