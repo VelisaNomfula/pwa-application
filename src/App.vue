@@ -7,7 +7,6 @@
 
 <style>
 #app {
-  margin-top: 50px;
   font-family: Avenir, Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -128,6 +128,7 @@
         this.loading = true;
         const response = await API.graphql(graphqlOperation(queries.listTodoListItems));
         this.listItems = response.data.listTodoListItems.items;
+        this.$forceUpdate();
       }
       catch(error){
           console.log('Error loading Todo list...', error)
